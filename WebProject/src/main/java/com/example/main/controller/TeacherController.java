@@ -38,14 +38,19 @@ public class TeacherController extends AppConfig {
 	@PostMapping("/saveTeacher")
 	public ResponseEntity<Teacher> createTeacher(@RequestBody Teacher teacher) {
 		try {
-			teacherRepository.save(teacher);
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setFrom("mensikhalil@gmail.com");
-			message.setTo(teacher.getEmailId());
-			message.setSubject("Password");
-			message.setText(teacher.getPassword());
-			emailSender.send(message);
-			return new ResponseEntity<>(teacher, HttpStatus.CREATED);
+			Optional<Teacher> teacherData = teacherRepository.getTeacherByEmailId(teacher.getEmailId());
+			if (teacherData.isPresent()) {
+				return new ResponseEntity<>(teacherData.get(), HttpStatus.FORBIDDEN);
+			} else {
+				teacherRepository.save(teacher);
+				SimpleMailMessage message = new SimpleMailMessage();
+				message.setFrom("mensikhalil@gmail.com");
+				message.setTo(teacher.getEmailId());
+				message.setSubject("Password");
+				message.setText(teacher.getPassword());
+				emailSender.send(message);
+				return new ResponseEntity<>(teacher, HttpStatus.CREATED);
+			}
 		} catch (Exception e) {
 			return new ResponseEntity<>(teacher, HttpStatus.NO_CONTENT);
 		}
@@ -55,6 +60,17 @@ public class TeacherController extends AppConfig {
 	@GetMapping("/getTeacher/{teacherId}")
 	public ResponseEntity<Teacher> getTeacherById(@PathVariable("teacherId") Long id) {
 		Optional<Teacher> teacherData = teacherRepository.findById(id);
+		if (teacherData.isPresent()) {
+			return new ResponseEntity<>(teacherData.get(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	@GetMapping("/getTeacherByEmailAndPassword/{emailId}/{password}")
+	public ResponseEntity<Teacher> getTeacherByEmailAndPassword(@PathVariable("emailId") String emailId,
+			@PathVariable("password") String password) {
+		Optional<Teacher> teacherData = teacherRepository.getTeacherByEmailIdAndPassword(emailId, password);
 		if (teacherData.isPresent()) {
 			return new ResponseEntity<>(teacherData.get(), HttpStatus.OK);
 		} else {

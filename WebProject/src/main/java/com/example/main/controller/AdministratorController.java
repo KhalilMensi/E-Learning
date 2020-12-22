@@ -37,16 +37,36 @@ public class AdministratorController extends AppConfig {
 	@PostMapping("/saveAdministrator")
 	public ResponseEntity<Administrator> createAdministrator(@RequestBody Administrator administrator) {
 		try {
-			administratorRepository.save(administrator);
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setFrom("mensikhalil@gmail.com");
-			message.setTo(administrator.getEmailId());
-			message.setSubject("Password");
-			message.setText(administrator.getPassword());
-			emailSender.send(message);
-			return new ResponseEntity<>(administrator, HttpStatus.CREATED);
+			// TODO verification de l'existance d'un autre utilisateur avec les méme donnée
+			Optional<Administrator> administratorData = administratorRepository
+					.getAdministratorByEmailId(administrator.getEmailId());
+			if (administratorData.isPresent()) {
+				return new ResponseEntity<>(administrator, HttpStatus.BAD_REQUEST);
+			} else {
+				administratorRepository.save(administrator);
+				SimpleMailMessage message = new SimpleMailMessage();
+				message.setFrom("mensikhalil@gmail.com");
+				message.setTo(administrator.getEmailId());
+				message.setSubject("Password");
+				message.setText(administrator.getPassword());
+				emailSender.send(message);
+				return new ResponseEntity<>(administrator, HttpStatus.CREATED);
+			}
+
 		} catch (Exception e) {
 			return new ResponseEntity<>(administrator, HttpStatus.NO_CONTENT);
+		}
+	}
+
+	@GetMapping("/getAdministratorByEmailIdAndPassword/{emailId}/{password}")
+	public ResponseEntity<Administrator> getAdministratorByEmailIdAndPassword(@PathVariable("emailId") String emailId,
+			@PathVariable("password") String password) {
+		Optional<Administrator> administratorData = administratorRepository
+				.getAdministratorByEmailIdAndPassword(emailId, password);
+		if (administratorData.isPresent()) {
+			return new ResponseEntity<>(administratorData.get(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 
@@ -66,7 +86,7 @@ public class AdministratorController extends AppConfig {
 	public ResponseEntity<HttpStatus> deleteAdministratorById(@PathVariable("administratorId") Long id) {
 		try {
 			administratorRepository.deleteById(id);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			return new ResponseEntity<>(HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}

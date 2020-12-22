@@ -37,22 +37,39 @@ public class StudentController extends AppConfig {
 		return studentRepository.findAll();
 	}
 
+	@GetMapping("/getStudentByEmailAndPassword/{emailId}/{password}")
+	public ResponseEntity<Student> getStudentByEmailAndPassword(@PathVariable("emailId") String emailId,
+			@PathVariable("password") String password) {
+		Optional<Student> studentData = studentRepository.getStudentByEmailIdAndPassword(emailId, password);
+		if (studentData.isPresent()) {
+			return new ResponseEntity<>(studentData.get(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
 	// save student
 	@PostMapping("/saveStudent")
 	public ResponseEntity<Student> createStudent(@RequestBody Student student) {
 		try {
 			try {
-				studentRepository.save(student);
-				SimpleMailMessage message = new SimpleMailMessage();
-				message.setFrom("mensikhalil@gmail.com");
-				message.setTo(student.getEmailId());
-				message.setSubject("Password");
-				message.setText(student.getPassword());
-				emailSender.send(message);
+				// check if there is a user by this email in the database
+				Optional<Student> studentData = studentRepository.getStudentByEmailId(student.getEmailId());
+				if (studentData.isPresent()) {
+					return new ResponseEntity<>(student, HttpStatus.NO_CONTENT);
+				} else {
+					studentRepository.save(student);
+					SimpleMailMessage message = new SimpleMailMessage();
+					message.setFrom("mensikhalil@gmail.com");
+					message.setTo(student.getEmailId());
+					message.setSubject("Password");
+					message.setText(student.getPassword());
+					emailSender.send(message);
+				}
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
 			return new ResponseEntity<>(student, HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(student, HttpStatus.NO_CONTENT);
