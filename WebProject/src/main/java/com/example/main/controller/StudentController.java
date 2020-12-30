@@ -22,7 +22,7 @@ import com.example.main.model.Student;
 import com.example.main.repository.StudentRepository;
 
 @RestController
-@RequestMapping("/api/v1/")
+@RequestMapping("/api/v1/student/")
 @CrossOrigin(origins = "http://localhost:4200")
 public class StudentController extends AppConfig {
 

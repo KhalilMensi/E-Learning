@@ -21,7 +21,7 @@ import com.example.main.model.Administrator;
 import com.example.main.repository.AdministratorRepository;
 
 @RestController
-@RequestMapping("/api/v1/")
+@RequestMapping("/api/v1/administrator/")
 public class AdministratorController extends AppConfig {
 	@Autowired
 	private AdministratorRepository administratorRepository;
@@ -37,7 +37,7 @@ public class AdministratorController extends AppConfig {
 	@PostMapping("/saveAdministrator")
 	public ResponseEntity<Administrator> createAdministrator(@RequestBody Administrator administrator) {
 		try {
-			// TODO verification de l'existance d'un autre utilisateur avec les méme donnée
+			// verification de l'existance d'un autre utilisateur avec les méme donnée
 			Optional<Administrator> administratorData = administratorRepository
 					.getAdministratorByEmailId(administrator.getEmailId());
 			if (administratorData.isPresent()) {
@@ -58,6 +58,7 @@ public class AdministratorController extends AppConfig {
 		}
 	}
 
+	// get Administrator By Email and Password
 	@GetMapping("/getAdministratorByEmailIdAndPassword/{emailId}/{password}")
 	public ResponseEntity<Administrator> getAdministratorByEmailIdAndPassword(@PathVariable("emailId") String emailId,
 			@PathVariable("password") String password) {
@@ -71,23 +72,36 @@ public class AdministratorController extends AppConfig {
 	}
 
 	// get administrator by Id
-	@GetMapping("/getAdministrator/{AdministratorId}")
+	@GetMapping("/getAdministratorById/{AdministratorId}")
 	public ResponseEntity<Administrator> getAdministratorById(@PathVariable("AdministratorId") Long id) {
-		Optional<Administrator> administratorData = administratorRepository.findById(id);
-		if (administratorData.isPresent()) {
-			return new ResponseEntity<>(administratorData.get(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		try {
+			Optional<Administrator> administratorData = administratorRepository.findById(id);
+			if (administratorData.isPresent()) {
+				return new ResponseEntity<>(administratorData.get(), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	// delete Administrator by Id
-	@GetMapping("/deleteAdministrator/{administratorId}")
+	@GetMapping("/deleteAdministratorById/{administratorId}")
 	public ResponseEntity<HttpStatus> deleteAdministratorById(@PathVariable("administratorId") Long id) {
 		try {
-			administratorRepository.deleteById(id);
-			return new ResponseEntity<>(HttpStatus.OK);
+			// check the presence of that entity in the database
+			Optional<Administrator> administratorData = administratorRepository.findById(id);
+			// delete if existence
+			if (administratorData.isPresent()) {
+				administratorRepository.deleteById(id);
+				return new ResponseEntity<>(HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}

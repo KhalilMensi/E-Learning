@@ -21,7 +21,7 @@ import com.example.main.model.Teacher;
 import com.example.main.repository.TeacherRepository;
 
 @RestController
-@RequestMapping("/api/v1/")
+@RequestMapping("/api/v1/teacher/")
 public class TeacherController extends AppConfig {
 
 	@Autowired
